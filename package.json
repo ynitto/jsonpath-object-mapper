@@ -1,0 +1,37 @@
+{
+  "name": "jsonpath-object-mapper",
+  "version": "1.0.0",
+  "description": "Object Mapper with the configuration of JsonPath selector",
+  "main": "dist/index.cjs.js",
+  "module": "dist/index.esm.js",
+  "types": "dist/index.d.ts",
+  "author": "ynitto",
+  "license": "MIT",
+  "scripts": {
+    "build": "npm-run-all build:esbuild build:types",
+    "build:esbuild": "npx tsx ./build.ts",
+    "build:types": "tsc --project tsconfig.types.json",
+    "test": "jest --coverage",
+    "test:coverage": "jest --coverage"
+  },
+  "dependencies": {
+    "deepmerge": "^4.3.1",
+    "jsonpath-plus": "^9.0.0"
+  },
+  "devDependencies": {
+    "@biomejs/biome": "^1.9.2",
+    "@types/jest": "^29.5.13",
+    "@types/jsonpath": "^0.2.4",
+    "esbuild": "^0.23.1",
+    "jest": "^29.7.0",
+    "jest-junit": "^16.0.0",
+    "npm-run-all2": "^6.2.3",
+    "ts-jest": "^29.2.5",
+    "tsx": "^4.19.1",
+    "typescript": "^5.6.2"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "email": "ynitto7@gmail.com"
+}
