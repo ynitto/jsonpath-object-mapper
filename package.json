@@ -1,6 +1,6 @@
 {
   "name": "jsonpath-object-mapper",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "description": "Object Mapper with the configuration of JsonPath selector",
   "main": "dist/index.cjs.js",
   "module": "dist/index.esm.js",

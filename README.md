@@ -139,9 +139,9 @@ console.log(result);
 
 Instead of a value or JsonPath, you can specify a special object, called JsonValueSchema,
 with the following properties;
-- `@path` (required): The property value or JsonPath expression.
-- `@default` (optional): The property value or JsonPath expression when `@path` yields no value.
-- `@transform` (optional): The function to transform the property value to be yielded by `@path` or @default.
+- `@path`(required): The property value or JsonPath expression.
+- `@default`(optional): The property value or JsonPath expression when `@path` yields no value.
+- `@transform`(optional): The function to transform the property value to be yielded by `@path` or `@default`.
 
 ```javascript
 const source = {
@@ -172,12 +172,12 @@ console.log(result);
 You sometimes want to generate an array of object which has new structure with mapping values.
 In this case, instead of a element value, you can specify a special object, called JsonElementSchema,
 with the following properties;
-- `@element` (required): Definition object for each property of an element object. It has the following key-value pairs;
+- `@element`(required): Definition object for each property of an element object. It has the following key-value pairs;
   - `key` represents the property key of an element object to be stored.
   - `value` represents the property value, JsonPath or JsonValueSchema of an element object.
     - For a single value, store it as a property `key` of each element object.
     - For arrays, select a value from the array according to the index of each element object and store it as the object's property `key`.
-- `@length` (optional): Length of the generated array.
+- `@length`(optional): Length of the generated array.
   - For a number, used as is.
   - For an array, used the length of it.
   - If omitted, used the maximum length of `value` in `@element`.
@@ -399,12 +399,18 @@ console.log(result);
 - map(source, schema[, target, options])
 Map values from source by the mapping definition schema.
 
-- `source` (required): the object from which properties will be copied.
-- `schema` (required): the definition object of mapping structures and values.
-- `target` (optional): the target object to be merged.
-- `options` (optional): the options of `map()` process.
-  - objectMergeMode (optional): How to merge `target` and the mapped object.
-  - arrayMergeMode (optional): How to merge arrays in `target` and the mapped object.
+- `source`(required): the object from which properties will be copied.
+- `schema`(required): the definition object of mapping structures and values.
+- `target`(optional): the target object to be merged.
+- `options`(optional): the options of `map()` process.
+  - `objectMergeMode`(optional): How to merge `target` and the mapped object.
+  - `arrayMergeMode`(optional): How to merge arrays in `target` and the mapped object.
+
+- value(source, key)
+Retrieve values ​​from a source using a mapping definition schema.
+
+- `source`(required): the object to find for a value.
+- `key`(required): the string (JsonPath expression) or object (JsonValueSchema) to represent a property of source.
 
 ## License
 

@@ -34,4 +34,5 @@ export interface MapOptions {
     arrayMergeMode?: "replace" | "append" | "prepend";
 }
 export declare function map(source: Json, schema: JsonSchema, target?: Json, options?: MapOptions): Json;
+export declare function value(source: Json, key: string | JsonValueSchema): Json;
 export {};

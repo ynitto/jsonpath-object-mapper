@@ -70,7 +70,7 @@ function isJsonPath(path: string): boolean {
   return path.startsWith("$.");
 }
 
-function isValueNode(schema: ValueInJsonSchema): schema is JsonValueSchema {
+function isValueSchema(schema: ValueInJsonSchema): schema is JsonValueSchema {
   return (
     !!schema &&
     typeof schema === "object" &&
@@ -79,7 +79,9 @@ function isValueNode(schema: ValueInJsonSchema): schema is JsonValueSchema {
   );
 }
 
-function isItemNode(schema: ValueInJsonSchema): schema is JsonElementSchema {
+function isElementSchema(
+  schema: ValueInJsonSchema,
+): schema is JsonElementSchema {
   return (
     !!schema &&
     typeof schema === "object" &&
@@ -97,7 +99,7 @@ function getJsonValue(
 ): Json {
   let mappedValue = schema as Json;
 
-  if (isValueNode(schema)) {
+  if (isValueSchema(schema)) {
     mappedValue = getJsonValue(source, target, schema["@path"], options);
 
     if (schema["@default"] !== undefined) {
@@ -196,7 +198,7 @@ function mapToArray(
   }
 
   const mappedItems = schema.flatMap((itemSchema, i) => {
-    if (isItemNode(itemSchema)) {
+    if (isElementSchema(itemSchema)) {
       const yieldedProperties: Record<
         string,
         [Json, ElementValuePadding | undefined]
@@ -297,7 +299,7 @@ function mapToAny(
     );
   }
 
-  if (schema != null && typeof schema === "object" && !isValueNode(schema)) {
+  if (schema != null && typeof schema === "object" && !isValueSchema(schema)) {
     return mapToObject(
       source,
       target as JsonObject,
@@ -317,4 +319,8 @@ export function map(
 ): Json {
   const fixedOptions = Object.assign({}, DefaultOptions, options ?? {});
   return mapToAny(source, target, schema, fixedOptions);
+}
+
+export function value(source: Json, key: string | JsonValueSchema): Json {
+  return getJsonValue(source, null, key, DefaultOptions);
 }
