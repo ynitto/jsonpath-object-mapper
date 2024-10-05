@@ -3,11 +3,15 @@
   "compilerOptions": {
     "baseUrl": ".",
     "rootDir": "./src",
+    "incremental": true,
     "declaration": true,
     "emitDeclarationOnly": true,
-    "declarationDir": "./dist"
+    "declarationDir": "./dist",
   },
+  "include": ["src/**/*.ts"],
   "exclude": [
-    "src/**/*.spec.ts"
+    "node_modules",
+    "src/**/*.spec.ts",
+    "src/**/*.test.ts"
   ]
 }
