@@ -8,6 +8,7 @@
   "author": "ynitto",
   "license": "MIT",
   "scripts": {
+    "prepare": "npm run build",
     "build": "npm-run-all build:esbuild build:types",
     "build:esbuild": "npx tsx ./build.ts",
     "build:types": "tsc --project tsconfig.types.json",

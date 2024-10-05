@@ -1,4 +1,4 @@
-export type Json = string | number | boolean | null | JsonObject | JsonArray;
+export type Json = string | number | boolean | null | JsonObject | JsonArray | undefined;
 export interface JsonObject {
     [property: string]: Json;
 }
@@ -8,31 +8,30 @@ export type TransformContext = {
     source: Json;
     schema: string;
 };
-export type JsonSchemaValueNode = {
+export type JsonValueSchema = {
     "@path": string;
-    "@default"?: JsonSchema;
-    "@transform"?: (value: Json, destination: Json, context: TransformContext) => Json;
+    "@default"?: ValueInJsonSchema;
+    "@transform"?: (value: Json, target: Json, context: TransformContext) => Json;
 };
-export type JsonSchemaItemNode = {
-    "@yield": {
-        [property: string]: JsonSchemaValue | JsonSchemaYieldValueNode;
-    }[];
+export type JsonElementSchema = {
+    "@element": {
+        [property: string]: ValueInJsonSchema | JsonElementValueSchema;
+    };
     "@length"?: JsonSchema;
 };
-export type YieldPaddingMode = "empty" | "edge" | "wrap" | "reflect";
-export type JsonSchemaYieldValueNode = JsonSchemaValueNode & {
-    "@padding"?: YieldPaddingMode;
+export type ElementValuePadding = "empty" | "edge" | "wrap" | "reflect";
+export type JsonElementValueSchema = JsonValueSchema & {
+    "@padding"?: ElementValuePadding;
 };
 export interface JsonSchema {
-    [property: string]: JsonSchemaValue;
+    [property: string]: ValueInJsonSchema;
 }
-type JsonSchemaValue = Json | JsonSchema | JsonSchemaValueNode | JsonSchemaArray;
-type JsonSchemaArrayElement = JsonSchemaValue | JsonSchemaItemNode;
-interface JsonSchemaArray extends Array<JsonSchemaArrayElement> {
+type ValueInJsonSchema = Json | JsonSchema | JsonValueSchema | ArrayInJsonSchema;
+interface ArrayInJsonSchema extends Array<ValueInJsonSchema | JsonElementSchema> {
 }
-export interface MapperOptions {
-    objectMergeMode: "overwrite" | "preserve" | "replace";
-    arrayMergeMode: "replace" | "concat" | "combine";
+export interface MapOptions {
+    objectMergeMode?: "overwrite" | "preserve" | "replace";
+    arrayMergeMode?: "replace" | "append" | "prepend";
 }
-export declare function map(source: Json, schema: JsonSchema, options?: Partial<MapperOptions>, target?: Json): Json;
+export declare function map(source: Json, schema: JsonSchema, target?: Json, options?: MapOptions): Json;
 export {};

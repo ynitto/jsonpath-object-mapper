@@ -19,40 +19,40 @@ export type TransformContext = {
   source: Json;
   schema: string;
 };
-export type JsonSchemaValueNode = {
+export type JsonValueSchema = {
   "@path": string;
-  "@default"?: JsonSchema;
+  "@default"?: ValueInJsonSchema;
   "@transform"?: (value: Json, target: Json, context: TransformContext) => Json;
 };
-export type JsonSchemaItemNode = {
-  "@yield": {
-    [property: string]: JsonSchemaValue | JsonSchemaYieldValueNode;
+export type JsonElementSchema = {
+  "@element": {
+    [property: string]: ValueInJsonSchema | JsonElementValueSchema;
   };
   "@length"?: JsonSchema;
 };
-export type YieldPadding = "empty" | "edge" | "wrap" | "reflect";
-export type JsonSchemaYieldValueNode = JsonSchemaValueNode & {
-  "@padding"?: YieldPadding;
+export type ElementValuePadding = "empty" | "edge" | "wrap" | "reflect";
+export type JsonElementValueSchema = JsonValueSchema & {
+  "@padding"?: ElementValuePadding;
 };
 export interface JsonSchema {
-  [property: string]: JsonSchemaValue;
+  [property: string]: ValueInJsonSchema;
 }
 
-type JsonSchemaValue =
+type ValueInJsonSchema =
   | Json
   | JsonSchema
-  | JsonSchemaValueNode
-  | JsonSchemaArray;
-type JsonSchemaArrayElement = JsonSchemaValue | JsonSchemaItemNode;
-interface JsonSchemaArray extends Array<JsonSchemaArrayElement> {}
-type JsonSchemaObject = JsonObject | JsonSchema | JsonSchemaValueNode;
+  | JsonValueSchema
+  | ArrayInJsonSchema;
+interface ArrayInJsonSchema
+  extends Array<ValueInJsonSchema | JsonElementSchema> {}
+type ObjectInJsonSchema = JsonObject | JsonSchema;
 
-export interface MapperOptions {
+export interface MapOptions {
   objectMergeMode?: "overwrite" | "preserve" | "replace";
-  arrayMergeMode?: "replace" | "concat";
+  arrayMergeMode?: "replace" | "append" | "prepend";
 }
 
-const DefaultOptions: MapperOptions = {
+const DefaultOptions: MapOptions = {
   objectMergeMode: "overwrite",
   arrayMergeMode: "replace",
 };
@@ -61,7 +61,6 @@ const range = (from: number, to: number) =>
   [...Array(to - from)].map((_, i) => from + i);
 const overwriteMerge = (_: Json[], source: Json[]) => source;
 const preserveMerge = (target: Json[], _: Json[]) => target;
-// const appendMerge = (target: Json[], source: Json[]) => target.concat(source);
 
 function unescapeString(prop: string) {
   return prop.startsWith("`") ? prop.substring(1) : prop;
@@ -71,7 +70,7 @@ function isJsonPath(path: string): boolean {
   return path.startsWith("$.");
 }
 
-function isValueNode(schema: JsonSchemaValue): schema is JsonSchemaValueNode {
+function isValueNode(schema: ValueInJsonSchema): schema is JsonValueSchema {
   return (
     !!schema &&
     typeof schema === "object" &&
@@ -80,21 +79,21 @@ function isValueNode(schema: JsonSchemaValue): schema is JsonSchemaValueNode {
   );
 }
 
-function isItemNode(schema: JsonSchemaValue): schema is JsonSchemaItemNode {
+function isItemNode(schema: ValueInJsonSchema): schema is JsonElementSchema {
   return (
     !!schema &&
     typeof schema === "object" &&
-    "@yield" in schema &&
-    !!schema["@yield"] &&
-    typeof schema["@yield"] === "object"
+    "@element" in schema &&
+    !!schema["@element"] &&
+    typeof schema["@element"] === "object"
   );
 }
 
 function getJsonValue(
   source: Json,
   target: Json,
-  schema: JsonSchemaValue,
-  options: MapperOptions,
+  schema: ValueInJsonSchema,
+  options: MapOptions,
 ): Json {
   let mappedValue = schema as Json;
 
@@ -136,8 +135,8 @@ function getJsonValue(
 function mapToObject(
   source: Json,
   target: JsonObject,
-  schema: JsonSchemaObject,
-  options: MapperOptions,
+  schema: ObjectInJsonSchema,
+  options: MapOptions,
 ): Json {
   let targetObject = target;
   if (!targetObject || typeof targetObject !== "object") {
@@ -156,7 +155,8 @@ function mapToObject(
     case "replace":
       arrayMerge = overwriteMerge;
       break;
-    case "concat":
+    case "append":
+    case "prepend":
       switch (options.objectMergeMode) {
         case "overwrite":
           arrayMerge = overwriteMerge;
@@ -187,8 +187,8 @@ function mapToObject(
 function mapToArray(
   source: Json,
   target: JsonArray,
-  schema: JsonSchemaArray,
-  options: MapperOptions,
+  schema: ArrayInJsonSchema,
+  options: MapOptions,
 ): JsonArray {
   let targetArray = target;
   if (!Array.isArray(target)) {
@@ -199,11 +199,13 @@ function mapToArray(
     if (isItemNode(itemSchema)) {
       const yieldedProperties: Record<
         string,
-        [Json, YieldPadding | undefined]
+        [Json, ElementValuePadding | undefined]
       > = {};
 
-      for (const [prop, valueSchema] of Object.entries(itemSchema["@yield"])) {
-        const padding = (valueSchema as JsonSchemaYieldValueNode)?.["@padding"];
+      for (const [prop, valueSchema] of Object.entries(
+        itemSchema["@element"],
+      )) {
+        const padding = (valueSchema as JsonElementValueSchema)?.["@padding"];
         const items = mapToAny(source, targetArray[i], valueSchema, options);
 
         yieldedProperties[prop] = [items, padding];
@@ -269,8 +271,11 @@ function mapToArray(
     case "replace":
       destination = mappedItems;
       break;
-    case "concat":
+    case "append":
       destination = [...targetArray, ...mappedItems];
+      break;
+    case "prepend":
+      destination = [...mappedItems, ...targetArray];
       break;
   }
 
@@ -280,14 +285,14 @@ function mapToArray(
 function mapToAny(
   source: Json,
   target: Json,
-  schema: JsonSchemaValue,
-  options: MapperOptions,
+  schema: ValueInJsonSchema,
+  options: MapOptions,
 ): Json {
   if (Array.isArray(schema)) {
     return mapToArray(
       source,
       target as JsonArray,
-      schema as JsonSchemaArray,
+      schema as ArrayInJsonSchema,
       options,
     );
   }
@@ -296,7 +301,7 @@ function mapToAny(
     return mapToObject(
       source,
       target as JsonObject,
-      schema as JsonSchemaObject,
+      schema as ObjectInJsonSchema,
       options,
     );
   }
@@ -307,8 +312,8 @@ function mapToAny(
 export function map(
   source: Json,
   schema: JsonSchema,
-  options?: Partial<MapperOptions>,
   target: Json = null,
+  options?: MapOptions,
 ): Json {
   const fixedOptions = Object.assign({}, DefaultOptions, options ?? {});
   return mapToAny(source, target, schema, fixedOptions);

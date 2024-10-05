@@ -1,10 +1,10 @@
 import { map } from "@src/mapper";
-import type { Json, MapperOptions, TransformContext } from "@src/mapper";
+import type { Json, MapOptions, TransformContext } from "@src/mapper";
 
 // biome-ignore lint/suspicious/noExplicitAny: for test
 type Result = any;
 
-test("should map to an object", () => {
+it("should map to an object", () => {
   // Given
   const source = {
     src: {
@@ -48,7 +48,7 @@ test("should map to an object", () => {
   expect(result.dst.f).toBe("const");
 });
 
-test("should map to an array", () => {
+it("should map to an array", () => {
   // Given
   const source = {
     src: {
@@ -76,7 +76,7 @@ test("should map to an array", () => {
   expect(result.dst.a[2]).toBe("Tweety");
 });
 
-test("should map to an object and array", () => {
+it("should map to an object and array", () => {
   // Given
   const source = {
     src: {
@@ -103,7 +103,7 @@ test("should map to an object and array", () => {
   expect(result.dst.b[0]).toBe("dog");
 });
 
-test("should map an object with default", () => {
+it("should map an object with default", () => {
   // Given
   const source = {
     src: {
@@ -154,7 +154,7 @@ test("should map an object with default", () => {
   expect(result.dst.f).toBe("cat");
 });
 
-test("should transform objects", () => {
+it("should transform objects", () => {
   // Given
   const source = {
     src: {
@@ -219,7 +219,7 @@ test("should transform objects", () => {
   };
 
   // When
-  const result: Result = map(source, schema, undefined, target);
+  const result: Result = map(source, schema, target);
 
   // Then
   expect(result).toBeTruthy();
@@ -232,7 +232,7 @@ test("should transform objects", () => {
   expect(result.dst.e).toBe("bird");
 });
 
-test("should merge objects by preserve", () => {
+it("should merge objects by preserve", () => {
   // Given
   const source = {
     src: {
@@ -248,9 +248,6 @@ test("should merge objects by preserve", () => {
       c: "$.src.z",
     },
   };
-  const options: MapperOptions = {
-    objectMergeMode: "preserve",
-  };
   const target = {
     dst: {
       b: {
@@ -260,9 +257,12 @@ test("should merge objects by preserve", () => {
       d: "sheep",
     },
   };
+  const options: MapOptions = {
+    objectMergeMode: "preserve",
+  };
 
   // When
-  const result: Result = map(source, schema, options, target);
+  const result: Result = map(source, schema, target, options);
 
   // Then
   expect(result).toBeTruthy();
@@ -275,7 +275,7 @@ test("should merge objects by preserve", () => {
   expect(result.dst.d).toBe("sheep");
 });
 
-test("should merge objects by replace", () => {
+it("should merge objects by replace", () => {
   // Given
   const source = {
     src: {
@@ -291,9 +291,6 @@ test("should merge objects by replace", () => {
       c: "$.src.z",
     },
   };
-  const options: MapperOptions = {
-    objectMergeMode: "replace",
-  };
   const target = {
     dst: {
       b: {
@@ -303,9 +300,12 @@ test("should merge objects by replace", () => {
       d: "sheep",
     },
   };
+  const options: MapOptions = {
+    objectMergeMode: "replace",
+  };
 
   // When
-  const result: Result = map(source, schema, options, target);
+  const result: Result = map(source, schema, target, options);
 
   // Then
   expect(result).toBeTruthy();
@@ -314,7 +314,7 @@ test("should merge objects by replace", () => {
   expect(result.dst.c).toBe("bird");
 });
 
-test("should map items of an array", () => {
+it("should map items of an array", () => {
   // Given
   const source = {
     src: {
@@ -337,7 +337,7 @@ test("should map items of an array", () => {
   };
 
   // When
-  const result: Result = map(source, schema, undefined, target);
+  const result: Result = map(source, schema, target);
 
   // Then
   expect(result).toBeTruthy();
@@ -347,7 +347,7 @@ test("should map items of an array", () => {
   expect(result.dst.items[2].label).toBe("bird");
 });
 
-test("should merge items of arrays with concat", () => {
+it("should merge items of arrays with append", () => {
   // Given
   const source = {
     src: {
@@ -363,17 +363,17 @@ test("should merge items of arrays with concat", () => {
       ],
     },
   };
-  const options: MapperOptions = {
-    arrayMergeMode: "concat",
-  };
   const target = {
     dst: {
       items: ["sheep", { label: "mouse" }],
     },
   };
+  const options: MapOptions = {
+    arrayMergeMode: "append",
+  };
 
   // When
-  const result: Result = map(source, schema, options, target);
+  const result: Result = map(source, schema, target, options);
 
   // Then
   expect(result).toBeTruthy();
@@ -385,7 +385,7 @@ test("should merge items of arrays with concat", () => {
   expect(result.dst.items[4].label).toBe("bird");
 });
 
-test("should merge items of arrays with preserve and concat", () => {
+it("should merge items of arrays with prepend", () => {
   // Given
   const source = {
     src: {
@@ -401,18 +401,56 @@ test("should merge items of arrays with preserve and concat", () => {
       ],
     },
   };
-  const options: MapperOptions = {
-    objectMergeMode: "preserve",
-    arrayMergeMode: "concat",
+  const target = {
+    dst: {
+      items: ["sheep", { label: "mouse" }],
+    },
+  };
+  const options: MapOptions = {
+    arrayMergeMode: "prepend",
+  };
+
+  // When
+  const result: Result = map(source, schema, target, options);
+
+  // Then
+  expect(result).toBeTruthy();
+  expect(result.dst?.items).toHaveLength(5);
+  expect(result.dst.items[0].label).toBe("dog");
+  expect(result.dst.items[1].label).toBe("cat");
+  expect(result.dst.items[2].label).toBe("bird");
+  expect(result.dst.items[3]).toBe("sheep");
+  expect(result.dst.items[4].label).toBe("mouse");
+});
+
+it("should merge items of arrays with preserve and append", () => {
+  // Given
+  const source = {
+    src: {
+      labels: ["dog", "cat", "bird"],
+    },
+  };
+  const schema = {
+    dst: {
+      items: [
+        { label: "$.src.labels[0]" },
+        { label: "$.src.labels[1]" },
+        { label: "$.src.labels[2]" },
+      ],
+    },
   };
   const target = {
     dst: {
       items: ["sheep", "mouse"],
     },
   };
+  const options: MapOptions = {
+    objectMergeMode: "preserve",
+    arrayMergeMode: "append",
+  };
 
   // When
-  const result: Result = map(source, schema, options, target);
+  const result: Result = map(source, schema, target, options);
 
   // Then
   expect(result).toBeTruthy();
@@ -424,7 +462,46 @@ test("should merge items of arrays with preserve and concat", () => {
   expect(result.dst.items[4].label).toBe("bird");
 });
 
-test("should yield items of an array", () => {
+it("should merge items of arrays with preserve and prepend", () => {
+  // Given
+  const source = {
+    src: {
+      labels: ["dog", "cat", "bird"],
+    },
+  };
+  const schema = {
+    dst: {
+      items: [
+        { label: "$.src.labels[0]" },
+        { label: "$.src.labels[1]" },
+        { label: "$.src.labels[2]" },
+      ],
+    },
+  };
+  const target = {
+    dst: {
+      items: ["sheep", "mouse"],
+    },
+  };
+  const options: MapOptions = {
+    objectMergeMode: "preserve",
+    arrayMergeMode: "prepend",
+  };
+
+  // When
+  const result: Result = map(source, schema, target, options);
+
+  // Then
+  expect(result).toBeTruthy();
+  expect(result.dst?.items).toHaveLength(5);
+  expect(result.dst.items[0].label).toBe("dog");
+  expect(result.dst.items[1].label).toBe("cat");
+  expect(result.dst.items[2].label).toBe("bird");
+  expect(result.dst.items[3]).toBe("sheep");
+  expect(result.dst.items[4]).toBe("mouse");
+});
+
+it("should yield items of an array", () => {
   // Given
   const source = {
     src: {
@@ -436,7 +513,7 @@ test("should yield items of an array", () => {
     dst: {
       items: [
         {
-          "@yield": {
+          "@element": {
             label: "$.src.labels",
             count: "$.src.counts",
             name: "dog_cat_bird",
@@ -467,7 +544,7 @@ test("should yield items of an array", () => {
   expect(result.dst.items[2].void).toBe(null);
 });
 
-test("should yield items of an array with padding", () => {
+it("should yield items of an array with padding", () => {
   // Given
   const source = {
     src: {
@@ -480,7 +557,7 @@ test("should yield items of an array with padding", () => {
     dst: {
       items: [
         {
-          "@yield": {
+          "@element": {
             label: "$.src.labels",
             count: {
               "@path": "$.src.counts",
@@ -542,7 +619,7 @@ test("should yield items of an array with padding", () => {
   expect(result.dst.items[5].label4).toBeUndefined();
 });
 
-test("should yield items of an array with length", () => {
+it("should yield items of an array with length", () => {
   // Given
   const source = {
     src: {
@@ -554,7 +631,7 @@ test("should yield items of an array with length", () => {
     dst: {
       items1: [
         {
-          "@yield": {
+          "@element": {
             label: "$.src.labels",
             count: {
               "@path": "$.src.counts",
@@ -566,7 +643,7 @@ test("should yield items of an array with length", () => {
       ],
       items2: [
         {
-          "@yield": {
+          "@element": {
             label: "$.src.labels",
             count: {
               "@path": "$.src.counts",
@@ -594,7 +671,7 @@ test("should yield items of an array with length", () => {
   expect(result.dst.items2[1].count).toBe(200);
 });
 
-test("should combine yielded items of an array", () => {
+it("should combine yielded items of an array", () => {
   // Given
   const source = {
     src: {
@@ -606,7 +683,7 @@ test("should combine yielded items of an array", () => {
     dst: {
       items: [
         {
-          "@yield": {
+          "@element": {
             label: "$.src.labels",
             count: {
               "@path": "$.src.counts",
@@ -620,7 +697,7 @@ test("should combine yielded items of an array", () => {
           },
         },
         {
-          "@yield": {
+          "@element": {
             label: "$.src.labels",
             count: {
               "@path": "$.src.counts",
@@ -669,7 +746,7 @@ test("should combine yielded items of an array", () => {
   expect(result.dst.items[5].tag).toBe("bird");
 });
 
-test("should map an object with escape", () => {
+it("should map an object with escape", () => {
   // Given
   const source = {
     src: {
@@ -683,7 +760,7 @@ test("should map an object with escape", () => {
       b: "$.src.a",
       items: [
         {
-          "@yield": {
+          "@element": {
             label: "$.src.labels",
             name: "`$.src.labels",
           },
@@ -691,7 +768,7 @@ test("should map an object with escape", () => {
       ],
       items2: [
         {
-          "`@yield": {
+          "`@element": {
             label: "`$.src.labels",
             name: "$.src.labels",
           },
@@ -716,9 +793,9 @@ test("should map an object with escape", () => {
   expect(result.dst.items[2].name).toBe("$.src.labels");
   expect(result.dst?.items2).toHaveLength(1);
   expect(result.dst.items2).toHaveLength(1);
-  expect(result.dst.items2[0]["@yield"].label).toBe("$.src.labels");
-  expect(result.dst.items2[0]["@yield"].name).toHaveLength(3);
-  expect(result.dst.items2[0]["@yield"].name[0]).toBe("dog");
-  expect(result.dst.items2[0]["@yield"].name[1]).toBe("cat");
-  expect(result.dst.items2[0]["@yield"].name[2]).toBe("bird");
+  expect(result.dst.items2[0]["@element"].label).toBe("$.src.labels");
+  expect(result.dst.items2[0]["@element"].name).toHaveLength(3);
+  expect(result.dst.items2[0]["@element"].name[0]).toBe("dog");
+  expect(result.dst.items2[0]["@element"].name[1]).toBe("cat");
+  expect(result.dst.items2[0]["@element"].name[2]).toBe("bird");
 });
