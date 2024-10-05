@@ -8,7 +8,7 @@
   "author": "ynitto",
   "license": "MIT",
   "scripts": {
-    "prebuild": "rimraf ./dist",
+    "prebuild": "rimraf ./dist *.tsbuildinfo",
     "prepare": "npm run build",
     "build": "npm-run-all build:esbuild build:types",
     "build:esbuild": "npx tsx ./build.ts",
