@@ -36,5 +36,26 @@
   "publishConfig": {
     "access": "public"
   },
-  "email": "ynitto7@gmail.com"
+  "email": "ynitto7@gmail.com",
+  "keywords": [
+    "jsonpath",
+    "jpath",
+    "json mapping",
+    "json mapper",
+    "json transform",
+    "json transformer",
+    "object mapping",
+    "object mapper",
+    "object transform",
+    "object transformer",
+    "property mapping",
+    "property mapper",
+    "json",
+    "mapping",
+    "mapper",
+    "transform",
+    "transformer",
+    "json template",
+    "object template"
+  ]
 }
