@@ -146,10 +146,12 @@ function mapToObject(
   }
 
   const mappedObject = Object.fromEntries(
-    Object.entries(schema).map(([prop, propSchema]) => {
-      const key = unescapeString(prop);
-      return [key, mapToAny(source, targetObject[key], propSchema, options)];
-    }),
+    Object.entries(schema)
+      .map(([prop, propSchema]) => {
+        const key = unescapeString(prop);
+        return [key, mapToAny(source, targetObject[key], propSchema, options)];
+      })
+      .filter((p) => p[1] !== undefined),
   );
 
   let arrayMerge = undefined;
@@ -229,43 +231,47 @@ function mapToArray(
         }
       }
 
-      return range(0, length).map((j) => {
-        return Object.fromEntries(
-          Object.entries(yieldedProperties)
-            .map(([prop, [items, padding]]) => {
-              if (Array.isArray(items)) {
-                switch (padding ?? "empty") {
-                  case "empty":
-                    return [prop, items[j]];
-                  case "edge":
-                    return [prop, items[j] ?? items.at(-1)];
-                  case "reflect":
-                    return [
-                      prop,
-                      items[
-                        ((j / items.length) | 0) % 2 === 0
-                          ? j % items.length
-                          : items.length - 1 - (j % items.length)
-                      ],
-                    ];
-                  case "wrap":
-                    return [prop, items[j % items.length]];
+      return range(0, length)
+        .map((j) => {
+          return Object.fromEntries(
+            Object.entries(yieldedProperties)
+              .map(([prop, [items, padding]]) => {
+                if (Array.isArray(items)) {
+                  switch (padding ?? "empty") {
+                    case "empty":
+                      return [prop, items[j]];
+                    case "edge":
+                      return [prop, items[j] ?? items.at(-1)];
+                    case "reflect":
+                      return [
+                        prop,
+                        items[
+                          ((j / items.length) | 0) % 2 === 0
+                            ? j % items.length
+                            : items.length - 1 - (j % items.length)
+                        ],
+                      ];
+                    case "wrap":
+                      return [prop, items[j % items.length]];
+                  }
                 }
-              }
 
-              switch (padding ?? "edge") {
-                case "empty":
-                  return [prop, j === 0 ? items : undefined];
-                default:
-                  return [prop, items];
-              }
-            })
-            .filter(([_, items]) => items !== undefined),
-        );
-      });
+                switch (padding ?? "edge") {
+                  case "empty":
+                    return [prop, j === 0 ? items : undefined];
+                  default:
+                    return [prop, items];
+                }
+              })
+              .filter(([_, items]) => items !== undefined),
+          );
+        })
+        .filter((v) => v !== undefined);
     }
 
-    return [mapToAny(source, targetArray[i], itemSchema, options)];
+    return [mapToAny(source, targetArray[i], itemSchema, options)].filter(
+      (v) => v !== undefined,
+    );
   });
 
   let destination = targetArray;
